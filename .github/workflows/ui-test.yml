@@ -1,0 +1,33 @@
+name: UI Screenshot Test
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  screenshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install deps
+        run: npm install
+
+      - name: Install Playwright
+        run: npx playwright install
+
+      - name: Start server & screenshot
+        run: |
+          nohup npm run dev & sleep 10
+          npx playwright screenshot http://localhost:3000 screenshot.png
+
+      - name: Upload Screenshot
+        uses: actions/upload-artifact@v3
+        with:
+          name: ui-screenshot
+          path: screenshot.png
