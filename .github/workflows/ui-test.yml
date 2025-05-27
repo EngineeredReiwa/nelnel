@@ -15,19 +15,30 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install deps
+      - name: Install dependencies
         run: npm install
 
       - name: Install Playwright
         run: npx playwright install
 
-      - name: Start server & screenshot
+      - name: Start server and capture screenshot
         run: |
-          nohup npm run dev & sleep 10
+          nohup npm run dev &
+          sleep 10
           npx playwright screenshot http://localhost:3000 screenshot.png
 
-      - name: Upload Screenshot
+      - name: Upload screenshot artifact
         uses: actions/upload-artifact@v3
         with:
           name: ui-screenshot
           path: screenshot.png
+
+      - name: Notify Slack
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "📸 Claudeの提案によるLPビルドが完了しました。スクリーンショットが利用可能です！確認はこちら： ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
