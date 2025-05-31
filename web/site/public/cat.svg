@@ -1,0 +1,69 @@
+<!-- cat-side.svg  @200×160 -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 200 160"
+     stroke="#000" stroke-width="4"
+     stroke-linecap="round" stroke-linejoin="round">
+
+  <!-- Tail -->
+  <g id="tail" fill="#F6A436">
+    <path d="M155 55
+             q18 32 0 56
+             q-18 23-30 9
+             q12-12  6-35
+             q-4-16 24-30Z" />
+  </g>
+
+  <!-- Body -->
+  <g id="body" fill="#F6A436">
+    <path d="M40 50
+             q50-20 100  0
+             q15 35-10 65
+             q-50 20-100  0
+             q-15-35 10-65Z" />
+  </g>
+
+  <!-- Rear Leg -->
+  <g id="legBack" fill="#F6A436">
+    <path d="M110 100
+             q25 10 15 30
+             q-5 15-25 10
+             q-12-2-10-18
+             q1-15 20-22Z" />
+  </g>
+
+  <!-- Front Leg -->
+  <g id="legFront" fill="#F6A436">
+    <path d="M60 100
+             q25 10 15 30
+             q-5 15-25 10
+             q-12-2-10-18
+             q1-15 20-22Z" />
+  </g>
+
+  <!-- Head -->
+  <g id="head" transform="translate(16,-4)" fill="#F6A436">
+    <!-- Skull -->
+    <path d="M0 70
+             q30-30  60  0
+             q10 25 -15 40
+             q-35  5 -45-15
+             q-8 -15  0 -25Z"/>
+    <!-- Ear L -->
+    <path d="M12 50
+             l-12-20
+             l18   7
+             Z" />
+    <!-- Ear R -->
+    <path d="M48 50
+             l12-20
+             l-18 7
+             Z" />
+    <!-- Eye -->
+    <circle cx="35" cy="75" r="4" fill="#000"/>
+    <!-- Nose + Mouth -->
+    <circle cx="60" cy="82" r="3" fill="#000"/>
+    <path d="M60 82
+             q4 6  0 10" fill="none"/>
+  </g>
+
+</svg>
