@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Cat, Play, Pause, Volume2, VolumeX, Home, Clock, MapPin, Activity } from 'lucide-react';
+import { Cat, Volume2, Home, Clock } from 'lucide-react';
 
 // Data types based on specification
 type MovementPoint = {
@@ -59,14 +59,11 @@ const voiceLogs: VoiceLog[] = [
 
 export default function CatMovementMap() {
   const [currentTime, setCurrentTime] = useState('08:00');
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [showPaths, setShowPaths] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(true); // Auto-play on load
   const [selectedPoint, setSelectedPoint] = useState<MovementPoint | null>(null);
   const [selectedStayPoint, setSelectedStayPoint] = useState<StayPoint | null>(null);
   const [selectedVoice, setSelectedVoice] = useState<VoiceLog | null>(null);
   const [timeSliderValue, setTimeSliderValue] = useState(0);
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
 
   const timeIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -95,20 +92,21 @@ export default function CatMovementMap() {
     return currentPoints[currentPoints.length - 1] || movementData[0];
   };
 
-  // Auto-play functionality
+  // Auto-play functionality (4 hours → 20 seconds playback)
   useEffect(() => {
     if (isPlaying) {
       timeIntervalRef.current = setInterval(() => {
         setTimeSliderValue(prev => {
-          const next = prev + 5; // 5分ずつ進める
-          if (next > 660) { // 11:00 (660分) まで
-            setIsPlaying(false);
-            return 660;
+          const next = prev + 1; // 1分ずつ進める
+          if (next > 240) { // 12:00 (240分) まで (08:00から4時間)
+            setIsPlaying(true); // Loop back to start
+            setCurrentTime('08:00');
+            return 0;
           }
           setCurrentTime(minutesToTime(480 + next)); // 08:00 (480分) から開始
           return next;
         });
-      }, 500);
+      }, 83); // 83ms ≈ 0.083秒 (1分 = 0.083秒, 20秒/240分)
     } else {
       if (timeIntervalRef.current) clearInterval(timeIntervalRef.current);
     }
@@ -122,6 +120,7 @@ export default function CatMovementMap() {
   const handleTimeChange = (value: number) => {
     setTimeSliderValue(value);
     setCurrentTime(minutesToTime(480 + value)); // 08:00から開始
+    setIsPlaying(true); // Restart playback when user interacts with slider
   };
 
   // Get path for movement visualization
@@ -135,19 +134,26 @@ export default function CatMovementMap() {
     }, '');
   };
 
-  // Get action color
-  const getActionColor = (action: string) => {
-    const colors = {
-      walking: '#3B82F6',
-      running: '#EF4444',
-      slow_walk: '#10B981',
-      eating: '#F59E0B',
-      sleeping: '#8B5CF6',
-      grooming: '#EC4899',
-      exploring: '#06B6D4',
-      resting: '#6B7280',
+  // Get action emoji
+  const getActionEmoji = (action: string) => {
+    const emojis = {
+      walking: '🚶',
+      running: '🏃',
+      slow_walk: '🚶',
+      eating: '🍚',
+      sleeping: '😴',
+      grooming: '🧶',
+      exploring: '🔍',
+      resting: '😴',
     };
-    return colors[action as keyof typeof colors] || '#6B7280';
+    return emojis[action as keyof typeof emojis] || '🐈';
+  };
+
+  // Get opacity based on time (past = 1.0, future = 0.3)
+  const getOpacityForTime = (pointTime: string) => {
+    const currentMinutes = timeToMinutes(currentTime);
+    const pointMinutes = timeToMinutes(pointTime);
+    return pointMinutes <= currentMinutes ? 1.0 : 0.3;
   };
 
   return (
@@ -181,62 +187,25 @@ export default function CatMovementMap() {
       <div className="container mx-auto px-4 py-6">
         {/* Control Panel */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-          <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
-            {/* Playback Controls */}
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setIsPlaying(!isPlaying)}
-                className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                <span>{isPlaying ? '一時停止' : '再生'}</span>
-              </button>
-              
-              <button
-                onClick={() => setShowPaths(!showPaths)}
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  showPaths ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'
-                }`}
-              >
-                軌跡表示
-              </button>
-            </div>
-
+          <div className="flex flex-col items-center">
             {/* Time Slider */}
-            <div className="flex-1 max-w-md">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="w-full max-w-2xl">
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
                 時間: {currentTime}
               </label>
               <input
                 type="range"
                 min="0"
-                max="180"
-                step="5"
+                max="240"
+                step="1"
                 value={timeSliderValue}
                 onChange={(e) => handleTimeChange(parseInt(e.target.value))}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
               />
               <div className="flex justify-between text-xs text-gray-500 mt-1">
                 <span>08:00</span>
-                <span>11:00</span>
+                <span>12:00</span>
               </div>
-            </div>
-
-            {/* Zoom Controls */}
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setZoomLevel(Math.max(0.5, zoomLevel - 0.1))}
-                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
-              >
-                -
-              </button>
-              <span className="text-sm text-gray-600">{Math.round(zoomLevel * 100)}%</span>
-              <button
-                onClick={() => setZoomLevel(Math.min(2, zoomLevel + 0.1))}
-                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
-              >
-                +
-              </button>
             </div>
           </div>
         </div>
@@ -252,7 +221,6 @@ export default function CatMovementMap() {
                   height="100%"
                   viewBox="0 0 500 500"
                   className="absolute inset-0"
-                  style={{ transform: `scale(${zoomLevel}) translate(${pan.x}px, ${pan.y}px)` }}
                 >
                   {/* Floor Plan Background */}
                   <defs>
@@ -275,43 +243,72 @@ export default function CatMovementMap() {
                   <rect x="50" y="350" width="80" height="80" fill="#fce7f3" stroke="#ec4899" strokeWidth="2" />
                   <text x="90" y="395" textAnchor="middle" className="text-sm font-medium" fill="#be185d">トイレ</text>
 
-                  {/* Movement Path */}
-                  {showPaths && (
-                    <path
-                      d={getMovementPath()}
-                      fill="none"
-                      stroke="#3B82F6"
-                      strokeWidth="3"
-                      strokeOpacity="0.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  )}
+                  {/* Movement Path - Always visible */}
+                  <path
+                    d={getMovementPath()}
+                    fill="none"
+                    stroke="#3B82F6"
+                    strokeWidth="3"
+                    strokeOpacity="0.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
 
                   {/* Movement Points */}
-                  {getCurrentMovementPoints().map((point, index) => (
-                    <g key={index}>
-                      <circle
-                        cx={point.x}
-                        cy={point.y}
-                        r={3 + point.speed * 5}
-                        fill={getActionColor(point.action)}
-                        opacity={0.7}
-                        className="cursor-pointer hover:opacity-100"
-                        onClick={() => setSelectedPoint(point)}
-                      />
-                      {index === getCurrentMovementPoints().length - 1 && (
-                        <motion.circle
-                          cx={point.x}
-                          cy={point.y}
-                          r="8"
-                          fill="#F97316"
-                          animate={{ scale: [1, 1.2, 1] }}
-                          transition={{ duration: 1, repeat: Infinity }}
-                        />
-                      )}
-                    </g>
-                  ))}
+                  {movementData.map((point, index) => {
+                    const isCurrentPosition = index === getCurrentMovementPoints().length - 1 && 
+                                            timeToMinutes(point.time) <= timeToMinutes(currentTime);
+                    const opacity = getOpacityForTime(point.time);
+                    
+                    return (
+                      <g key={index} opacity={opacity}>
+                        {isCurrentPosition ? (
+                          <motion.g
+                            animate={{ scale: [1, 1.2, 1] }}
+                            transition={{ duration: 1, repeat: Infinity }}
+                          >
+                            <circle
+                              cx={point.x}
+                              cy={point.y}
+                              r="20"
+                              fill="rgba(251, 115, 22, 0.2)"
+                              className="cursor-pointer"
+                              onClick={() => setSelectedPoint(point)}
+                            />
+                            <text
+                              x={point.x}
+                              y={point.y + 5}
+                              textAnchor="middle"
+                              fontSize="20"
+                              className="pointer-events-none"
+                            >
+                              {getActionEmoji(point.action)}
+                            </text>
+                          </motion.g>
+                        ) : (
+                          <>
+                            <circle
+                              cx={point.x}
+                              cy={point.y}
+                              r="15"
+                              fill="transparent"
+                              className="cursor-pointer hover:fill-gray-100"
+                              onClick={() => setSelectedPoint(point)}
+                            />
+                            <text
+                              x={point.x}
+                              y={point.y + 5}
+                              textAnchor="middle"
+                              fontSize="16"
+                              className="pointer-events-none"
+                            >
+                              {getActionEmoji(point.action)}
+                            </text>
+                          </>
+                        )}
+                      </g>
+                    );
+                  })}
 
                   {/* Stay Points */}
                   {stayPoints.map((point, index) => (
@@ -339,10 +336,10 @@ export default function CatMovementMap() {
                   ))}
 
                   {/* Voice Logs */}
-                  {voiceLogs
-                    .filter(voice => timeToMinutes(voice.time) <= timeToMinutes(currentTime))
-                    .map((voice, index) => (
-                      <g key={index}>
+                  {voiceLogs.map((voice, index) => {
+                    const opacity = getOpacityForTime(voice.time);
+                    return (
+                      <g key={index} opacity={opacity}>
                         <circle
                           cx={voice.x}
                           cy={voice.y}
@@ -362,7 +359,8 @@ export default function CatMovementMap() {
                           fill="#EC4899"
                         />
                       </g>
-                    ))}
+                    );
+                  })}
                 </svg>
               </div>
             </div>
@@ -370,72 +368,33 @@ export default function CatMovementMap() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Current Status */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                <Activity className="w-5 h-5 mr-2" />
-                現在の状況
-              </h3>
-              {(() => {
-                const currentPos = getCurrentCatPosition();
-                return (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">時刻:</span>
-                      <span className="font-medium">{currentTime}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">場所:</span>
-                      <span className="font-medium">{currentPos.location}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">行動:</span>
-                      <span className="font-medium">{currentPos.action}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">速度:</span>
-                      <div className="flex items-center">
-                        <div className="w-20 bg-gray-200 rounded-full h-2 mr-2">
-                          <div 
-                            className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${currentPos.speed * 100}%` }}
-                          />
-                        </div>
-                        <span className="text-sm">{Math.round(currentPos.speed * 10)}/10</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-
             {/* Legend */}
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h3 className="text-lg font-bold text-gray-800 mb-4">凡例</h3>
               <div className="space-y-2">
                 <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
-                  <span className="text-sm">歩行</span>
+                  <span className="text-xl">🚶</span>
+                  <span className="text-sm">移動</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-red-500 rounded-full"></div>
-                  <span className="text-sm">走行</span>
+                  <span className="text-xl">🏃</span>
+                  <span className="text-sm">走る</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                  <span className="text-sm">ゆっくり歩行</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-yellow-500 rounded-full"></div>
+                  <span className="text-xl">🍚</span>
                   <span className="text-sm">食事</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
+                  <span className="text-xl">😴</span>
                   <span className="text-sm">睡眠</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-pink-500 rounded-full"></div>
+                  <span className="text-xl">🧶</span>
                   <span className="text-sm">グルーミング</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <span className="text-xl">🔍</span>
+                  <span className="text-sm">探索</span>
                 </div>
               </div>
             </div>
@@ -444,12 +403,13 @@ export default function CatMovementMap() {
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h3 className="text-lg font-bold text-gray-800 mb-4">鳴き声ログ</h3>
               <div className="space-y-3">
-                {voiceLogs
-                  .filter(voice => timeToMinutes(voice.time) <= timeToMinutes(currentTime))
-                  .map((voice, index) => (
+                {voiceLogs.map((voice, index) => {
+                  const opacity = getOpacityForTime(voice.time);
+                  return (
                     <div 
                       key={index}
                       className="p-3 bg-pink-50 rounded-lg cursor-pointer hover:bg-pink-100 transition-colors"
+                      style={{ opacity }}
                       onClick={() => setSelectedVoice(voice)}
                     >
                       <div className="flex items-center justify-between mb-1">
@@ -458,7 +418,8 @@ export default function CatMovementMap() {
                       </div>
                       <p className="text-sm text-gray-600">{voice.interpretation}</p>
                     </div>
-                  ))}
+                  );
+                })}
               </div>
             </div>
           </div>
