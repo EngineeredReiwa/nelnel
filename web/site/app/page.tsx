@@ -190,22 +190,34 @@ export default function NelChanTimeline() {
           </p>
         </motion.div>
 
-        {/* Navigation to LP */}
+        {/* Navigation */}
         <motion.div 
-          className="mt-8 text-center"
+          className="mt-8 text-center space-y-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
-          <a 
-            href="/lp"
-            className="inline-flex items-center space-x-2 bg-white text-gray-800 px-6 py-3 rounded-full font-medium hover:bg-gray-100 transition-colors shadow-lg"
-          >
-            <span>CatSenseについて詳しく</span>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </a>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a 
+              href="/movement"
+              className="inline-flex items-center space-x-2 bg-blue-500 text-white px-6 py-3 rounded-full font-medium hover:bg-blue-600 transition-colors shadow-lg"
+            >
+              <span>動線マップを見る</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+            </a>
+            
+            <a 
+              href="/lp"
+              className="inline-flex items-center space-x-2 bg-white text-gray-800 px-6 py-3 rounded-full font-medium hover:bg-gray-100 transition-colors shadow-lg"
+            >
+              <span>CatSenseについて詳しく</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+          </div>
         </motion.div>
       </main>
 
