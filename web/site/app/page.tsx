@@ -5,8 +5,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { Cat, Clock, Activity, TrendingUp, Moon, Sun, Coffee, Heart } from 'lucide-react';
 
+type Activity = {
+  time: string;
+  activity: string;
+  emoji: string;
+  title: string;
+  description: string;
+};
+
 // Mock data for Nel-chan's activities
-const activities = [
+const activities :Activity[]= [
   { time: '06:00', activity: 'sleep', emoji: '😴', title: '熟睡中', description: 'ぐっすり眠っています' },
   { time: '07:30', activity: 'wake', emoji: '😊', title: '起床', description: 'おはよう！目が覚めました' },
   { time: '08:00', activity: 'eat', emoji: '🍽️', title: '朝ごはん', description: 'カリカリを食べています' },
@@ -34,7 +42,7 @@ const activityData = [
 
 export default function NelChanTimeline() {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [selectedActivity, setSelectedActivity] = useState(null);
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [currentActivityIndex, setCurrentActivityIndex] = useState(0);
 
   useEffect(() => {

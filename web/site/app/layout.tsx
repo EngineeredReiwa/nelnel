@@ -4,6 +4,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "nelnel - Cat Activity Monitor",
   description: "Monitor your cat's daily activities with Nel-chan",
+  icons: {
+    icon: "/favicon.ico", // ← ✅ import せずにURLで指定、これでOK
+  },
 };
 
 export default function RootLayout({
