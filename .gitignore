@@ -1,0 +1,50 @@
+# macOS ごみファイル
+.DS_Store
+
+# OS一時ファイルやバイナリログ
+Thumbs.db
+ehthumbs.db
+*.log
+
+# Node.js / Next.js 関連
+node_modules/
+.next/
+dist/
+out/
+
+# VSCode など IDE 設定
+.vscode/
+.idea/
+
+# Blender 一時ファイル・バックアップ
+*.blend1
+*.blend2
+*.blend@
+*.gcode
+*.data
+*.idea
+
+# 生成された STL など、バイナリファイルが多くなるなら任意で
+*.stl
+
+# パッケージロック（必要なら明示的に管理）
+# package-lock.json
+# yarn.lock
+
+# 個人設定など
+*.env
+.env.*
+*.local
+
+# Git LFS にすべき大容量バイナリ（誤って add しないため）
+*.node
+*.bin
+*.zip
+*.tar
+*.exe
+*.dmg
+
+# 本プロジェクトの特定フォルダ構造に基づく除外
+/web/site/node_modules/
+/web/site/.next/
+/web/site/out/
