@@ -48,3 +48,6 @@ out/
 /web/site/node_modules/
 /web/site/.next/
 /web/site/out/
+
+# GitHub制限を超える大容量ファイル（明示的に除外）
+web/site/node_modules/@next/swc-darwin-arm64/next-swc.darwin-arm64.node
