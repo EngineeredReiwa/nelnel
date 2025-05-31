@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Cat, Play, Pause, Volume2, VolumeX, Home, Clock, MapPin, Activity } from 'lucide-react';
+import { Cat, Volume2, Home, Clock } from 'lucide-react';
 
 // Data types based on specification
 type MovementPoint = {
@@ -59,8 +59,6 @@ const voiceLogs: VoiceLog[] = [
 
 export default function CatMovementMap() {
   const [currentTime, setCurrentTime] = useState('08:00');
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [showPaths, setShowPaths] = useState(true);
   const [selectedPoint, setSelectedPoint] = useState<MovementPoint | null>(null);
   const [selectedStayPoint, setSelectedStayPoint] = useState<StayPoint | null>(null);
   const [selectedVoice, setSelectedVoice] = useState<VoiceLog | null>(null);
@@ -95,33 +93,41 @@ export default function CatMovementMap() {
     return currentPoints[currentPoints.length - 1] || movementData[0];
   };
 
-  // Auto-play functionality
+  // Auto-play functionality - always playing
   useEffect(() => {
-    if (isPlaying) {
-      timeIntervalRef.current = setInterval(() => {
-        setTimeSliderValue(prev => {
-          const next = prev + 5; // 5分ずつ進める
-          if (next > 660) { // 11:00 (660分) まで
-            setIsPlaying(false);
-            return 660;
-          }
-          setCurrentTime(minutesToTime(480 + next)); // 08:00 (480分) から開始
-          return next;
-        });
-      }, 500);
-    } else {
-      if (timeIntervalRef.current) clearInterval(timeIntervalRef.current);
-    }
+    timeIntervalRef.current = setInterval(() => {
+      setTimeSliderValue(prev => {
+        const next = prev + 1; // 1分ずつ進める
+        if (next > 180) { // 11:00まで（3時間 = 180分）
+          return 0; // 最初に戻る
+        }
+        setCurrentTime(minutesToTime(480 + next)); // 08:00 (480分) から開始
+        return next;
+      });
+    }, 1000); // 1秒ごとに1分進める
 
     return () => {
       if (timeIntervalRef.current) clearInterval(timeIntervalRef.current);
     };
-  }, [isPlaying]);
+  }, []);
 
-  // Handle time slider change
+  // Handle time slider change - auto-restart from new position
   const handleTimeChange = (value: number) => {
     setTimeSliderValue(value);
     setCurrentTime(minutesToTime(480 + value)); // 08:00から開始
+    
+    // Reset auto-play from new position
+    if (timeIntervalRef.current) clearInterval(timeIntervalRef.current);
+    timeIntervalRef.current = setInterval(() => {
+      setTimeSliderValue(prev => {
+        const next = prev + 1;
+        if (next > 180) {
+          return 0;
+        }
+        setCurrentTime(minutesToTime(480 + next));
+        return next;
+      });
+    }, 1000);
   };
 
   // Get path for movement visualization
@@ -135,19 +141,34 @@ export default function CatMovementMap() {
     }, '');
   };
 
-  // Get action color
-  const getActionColor = (action: string) => {
-    const colors = {
-      walking: '#3B82F6',
-      running: '#EF4444',
-      slow_walk: '#10B981',
-      eating: '#F59E0B',
-      sleeping: '#8B5CF6',
-      grooming: '#EC4899',
-      exploring: '#06B6D4',
-      resting: '#6B7280',
+  // Get action emoji
+  const getActionEmoji = (action: string) => {
+    const emojis = {
+      walking: '🚶',
+      running: '🏃',
+      slow_walk: '🐌',
+      eating: '🍚',
+      sleeping: '😴',
+      grooming: '🧼',
+      exploring: '🔍',
+      resting: '💤',
     };
-    return colors[action as keyof typeof colors] || '#6B7280';
+    return emojis[action as keyof typeof emojis] || '🐱';
+  };
+
+  // Get action label
+  const getActionLabel = (action: string) => {
+    const labels = {
+      walking: '歩行',
+      running: '走行',
+      slow_walk: 'ゆっくり歩行',
+      eating: '食事',
+      sleeping: '睡眠',
+      grooming: 'グルーミング',
+      exploring: '探索',
+      resting: '休息',
+    };
+    return labels[action as keyof typeof labels] || action;
   };
 
   return (
@@ -182,24 +203,10 @@ export default function CatMovementMap() {
         {/* Control Panel */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
           <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
-            {/* Playback Controls */}
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setIsPlaying(!isPlaying)}
-                className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                <span>{isPlaying ? '一時停止' : '再生'}</span>
-              </button>
-              
-              <button
-                onClick={() => setShowPaths(!showPaths)}
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  showPaths ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'
-                }`}
-              >
-                軌跡表示
-              </button>
+            {/* Time Display */}
+            <div className="flex items-center space-x-2">
+              <Clock className="w-5 h-5 text-gray-600" />
+              <span className="text-lg font-medium text-gray-800">{currentTime}</span>
             </div>
 
             {/* Time Slider */}
@@ -275,43 +282,72 @@ export default function CatMovementMap() {
                   <rect x="50" y="350" width="80" height="80" fill="#fce7f3" stroke="#ec4899" strokeWidth="2" />
                   <text x="90" y="395" textAnchor="middle" className="text-sm font-medium" fill="#be185d">トイレ</text>
 
-                  {/* Movement Path */}
-                  {showPaths && (
-                    <path
-                      d={getMovementPath()}
-                      fill="none"
-                      stroke="#3B82F6"
-                      strokeWidth="3"
-                      strokeOpacity="0.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  )}
+                  {/* Movement Path - always visible */}
+                  <path
+                    d={getMovementPath()}
+                    fill="none"
+                    stroke="#3B82F6"
+                    strokeWidth="2"
+                    strokeOpacity="0.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
 
-                  {/* Movement Points */}
-                  {getCurrentMovementPoints().map((point, index) => (
-                    <g key={index}>
-                      <circle
-                        cx={point.x}
-                        cy={point.y}
-                        r={3 + point.speed * 5}
-                        fill={getActionColor(point.action)}
-                        opacity={0.7}
-                        className="cursor-pointer hover:opacity-100"
-                        onClick={() => setSelectedPoint(point)}
-                      />
-                      {index === getCurrentMovementPoints().length - 1 && (
-                        <motion.circle
-                          cx={point.x}
-                          cy={point.y}
-                          r="8"
-                          fill="#F97316"
-                          animate={{ scale: [1, 1.2, 1] }}
-                          transition={{ duration: 1, repeat: Infinity }}
-                        />
-                      )}
-                    </g>
-                  ))}
+                  {/* Movement Points with actions */}
+                  {getCurrentMovementPoints().map((point, index) => {
+                    const isCurrentPosition = index === getCurrentMovementPoints().length - 1;
+                    return (
+                      <g key={index}>
+                        {/* Past actions - faded */}
+                        {!isCurrentPosition && point.action !== 'walking' && point.action !== 'running' && point.action !== 'slow_walk' && (
+                          <g opacity={0.3}>
+                            <circle
+                              cx={point.x}
+                              cy={point.y}
+                              r="16"
+                              fill="rgba(229, 231, 235, 0.8)"
+                              className="cursor-pointer"
+                              onClick={() => setSelectedPoint(point)}
+                            />
+                            <text
+                              x={point.x}
+                              y={point.y + 5}
+                              textAnchor="middle"
+                              fontSize="14"
+                              className="pointer-events-none"
+                            >
+                              {getActionEmoji(point.action)}
+                            </text>
+                          </g>
+                        )}
+                        
+                        {/* Current position - highlighted */}
+                        {isCurrentPosition && (
+                          <g>
+                            <motion.circle
+                              cx={point.x}
+                              cy={point.y}
+                              r="20"
+                              fill="rgba(251, 146, 60, 0.2)"
+                              stroke="#F97316"
+                              strokeWidth="3"
+                              animate={{ scale: [1, 1.1, 1] }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                            />
+                            <text
+                              x={point.x}
+                              y={point.y + 6}
+                              textAnchor="middle"
+                              fontSize="18"
+                              className="pointer-events-none"
+                            >
+                              {getActionEmoji(point.action)}
+                            </text>
+                          </g>
+                        )}
+                      </g>
+                    );
+                  })}
 
                   {/* Stay Points */}
                   {stayPoints.map((point, index) => (
@@ -370,72 +406,47 @@ export default function CatMovementMap() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Current Status */}
+            {/* Legend - Emoji to Action Mapping */}
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                <Activity className="w-5 h-5 mr-2" />
-                現在の状況
-              </h3>
-              {(() => {
-                const currentPos = getCurrentCatPosition();
-                return (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">時刻:</span>
-                      <span className="font-medium">{currentTime}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">場所:</span>
-                      <span className="font-medium">{currentPos.location}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">行動:</span>
-                      <span className="font-medium">{currentPos.action}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">速度:</span>
-                      <div className="flex items-center">
-                        <div className="w-20 bg-gray-200 rounded-full h-2 mr-2">
-                          <div 
-                            className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${currentPos.speed * 100}%` }}
-                          />
-                        </div>
-                        <span className="text-sm">{Math.round(currentPos.speed * 10)}/10</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-
-            {/* Legend */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">凡例</h3>
-              <div className="space-y-2">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">行動の凡例</h3>
+              <div className="space-y-3">
                 <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+                  <span className="text-xl">🚶</span>
                   <span className="text-sm">歩行</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-red-500 rounded-full"></div>
+                  <span className="text-xl">🏃</span>
                   <span className="text-sm">走行</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+                  <span className="text-xl">🐌</span>
                   <span className="text-sm">ゆっくり歩行</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-yellow-500 rounded-full"></div>
+                  <span className="text-xl">🍚</span>
                   <span className="text-sm">食事</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
+                  <span className="text-xl">😴</span>
                   <span className="text-sm">睡眠</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-pink-500 rounded-full"></div>
+                  <span className="text-xl">🧼</span>
                   <span className="text-sm">グルーミング</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <span className="text-xl">🔍</span>
+                  <span className="text-sm">探索</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <span className="text-xl">💤</span>
+                  <span className="text-sm">休息</span>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="flex items-center space-x-3">
+                  <div className="w-4 h-1 bg-blue-500 rounded"></div>
+                  <span className="text-sm text-gray-600">移動軌跡</span>
                 </div>
               </div>
             </div>
