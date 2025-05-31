@@ -25,9 +25,9 @@ export default function Home() {
             <button className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-8 rounded-full text-lg transition-colors">
               モニター応募フォームへ
             </button>
-            <button className="border-2 border-purple-600 text-purple-600 hover:bg-purple-50 font-bold py-4 px-8 rounded-full text-lg transition-colors">
-              詳しく見る
-            </button>
+            <a href="/demo" className="border-2 border-purple-600 text-purple-600 hover:bg-purple-50 font-bold py-4 px-8 rounded-full text-lg transition-colors text-center">
+              🎬 ねるちゃんデモを見る
+            </a>
           </div>
         </div>
       </section>
@@ -159,12 +159,24 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Notification Preview */}
+      {/* Demo Preview */}
       <section className="px-4 py-20 bg-gradient-to-r from-purple-100 to-pink-100">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-12">
-            通知イメージ
+            📱 アプリ体験デモ
           </h2>
+          <div className="text-center mb-8">
+            <p className="text-xl text-gray-700 mb-6">
+              ねるちゃんの一日がどのように見えるか、実際に体験してみませんか？
+            </p>
+            <a 
+              href="/demo" 
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-4 px-8 rounded-full text-lg transition-all transform hover:scale-105 inline-block"
+            >
+              🎬 ねるちゃんタイムラインデモを開く
+            </a>
+          </div>
+          
           <div className="bg-white p-8 rounded-2xl shadow-lg max-w-2xl mx-auto">
             <div className="flex items-center gap-3 mb-6">
               <div className="text-3xl">🐱</div>
@@ -184,6 +196,9 @@ export default function Home() {
                 <span>22時ごろに甘え鳴き → その後ぐっすり就寝</span>
               </li>
             </ul>
+            <div className="mt-4 text-sm text-gray-500 text-center">
+              ↑ このような情報がリアルタイムで更新されます
+            </div>
           </div>
         </div>
       </section>
